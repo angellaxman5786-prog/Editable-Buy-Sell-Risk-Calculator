@@ -86,3 +86,101 @@ f("st2",st2.toFixed(2));
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Risk Calculator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f2f2;font-family:Arial,sans-serif}
+.card{max-width:430px;margin:10px auto;background:#fff;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+h2{text-align:center;margin:8px 0}
+input{width:100%;padding:10px;margin:6px 0;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.box{padding:8px;border-radius:8px}
+.buy{background:#eaf8ee}
+.sell{background:#fdeaea}
+.row{display:flex;justify-content:space-between;padding:3px 0}
+h3{text-align:center;margin:4px 0}
+b{font-size:15px}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Risk Calculator</h2>
+
+<input id="risk" type="number" value="3000" placeholder="Risk Amount">
+<input id="rr" type="number" value="2" step="0.1" placeholder="RR">
+<input id="high" type="number" placeholder="High">
+<input id="low" type="number" placeholder="Low">
+
+<div class="grid">
+<div class="box buy">
+<h3>BUY</h3>
+<div class="row"><span>Entry</span><b id="be">-</b></div>
+<div class="row"><span>SL</span><b id="bs">-</b></div>
+<div class="row"><span>Qty</span><b id="bq">-</b></div>
+<div class="row"><span>T1 1.5R</span><b id="bt1">-</b></div>
+<div class="row"><span>T2 RR</span><b id="bt2">-</b></div>
+</div>
+
+<div class="box sell">
+<h3>SELL</h3>
+<div class="row"><span>Entry</span><b id="se">-</b></div>
+<div class="row"><span>SL</span><b id="ss">-</b></div>
+<div class="row"><span>Qty</span><b id="sq">-</b></div>
+<div class="row"><span>T1 1.5R</span><b id="st1">-</b></div>
+<div class="row"><span>T2 RR</span><b id="st2">-</b></div>
+</div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+["risk","rr","high","low"].forEach(id=>$(id).addEventListener("input",calc));
+
+function set(id,val){$(id).textContent=val;}
+
+function calc(){
+const risk=parseFloat($("risk").value)||3000;
+const rr=parseFloat($("rr").value)||2;
+const high=parseFloat($("high").value);
+const low=parseFloat($("low").value);
+
+if(isNaN(high)||isNaN(low)||high<=low){
+["be","bs","bq","bt1","bt2","se","ss","sq","st1","st2"].forEach(i=>set(i,"-"));
+return;
+}
+
+const buyEntry=high*1.001;
+const buySL=low*0.999;
+const buyRisk=buyEntry-buySL;
+const buyQty=Math.floor(risk/buyRisk);
+const buyT1=buyEntry+buyRisk*1.5;
+const buyT2=buyEntry+buyRisk*rr;
+
+const sellEntry=low*0.999;
+const sellSL=high*1.001;
+const sellRisk=sellSL-sellEntry;
+const sellQty=Math.floor(risk/sellRisk);
+const sellT1=sellEntry-sellRisk*1.5;
+const sellT2=sellEntry-sellRisk*rr;
+
+set("be",buyEntry.toFixed(2));
+set("bs",buySL.toFixed(2));
+set("bq",buyQty);
+set("bt1",buyT1.toFixed(2));
+set("bt2",buyT2.toFixed(2));
+
+set("se",sellEntry.toFixed(2));
+set("ss",sellSL.toFixed(2));
+set("sq",sellQty);
+set("st1",sellT1.toFixed(2));
+set("st2",sellT2.toFixed(2));
+}
+</script>
+</body>
+</html>
