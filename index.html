@@ -1,93 +1,394 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Risk Calculator</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f3f3f3;font-family:Arial}
-.wrap{max-width:430px;margin:10px auto;background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-h2{text-align:center;margin:6px 0 12px}
-input{width:100%;padding:10px;font-size:16px;margin:5px 0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.card{border-radius:10px;padding:8px}
-.buy{background:#e8f8ec}.sell{background:#fdeaea}
-.row{display:flex;justify-content:space-between;padding:3px 0}
-.row b{font-size:15px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk & Position Size Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --input-bg: #334155;
+            --border-color: #475569;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --buy-color: #10b981;
+            --buy-bg: rgba(16, 185, 129, 0.1);
+            --buy-border: rgba(16, 185, 129, 0.3);
+            --sell-color: #ef4444;
+            --sell-bg: rgba(239, 68, 68, 0.1);
+            --sell-border: rgba(239, 68, 68, 0.3);
+            --accent: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+
+        .calculator-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 440px;
+            border-radius: 20px;
+            padding: 18px 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group.full-width {
+            grid-column: span 2;
+        }
+
+        .input-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group label span.hint {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper span.prefix {
+            position: absolute;
+            left: 10px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 10px 8px 24px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            background-color: #3b4c63;
+        }
+
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .trade-box {
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .trade-box.buy {
+            background-color: var(--buy-bg);
+            border: 1px solid var(--buy-border);
+        }
+
+        .trade-box.sell {
+            background-color: var(--sell-bg);
+            border: 1px solid var(--sell-border);
+        }
+
+        .box-title {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .buy .box-title { color: var(--buy-color); }
+        .sell .box-title { color: var(--sell-color); }
+
+        .badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .buy .badge { background: rgba(16, 185, 129, 0.2); color: var(--buy-color); }
+        .sell .badge { background: rgba(239, 68, 68, 0.2); color: var(--sell-color); }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .data-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .data-value {
+            font-weight: 700;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .highlight-row {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px 6px;
+            border-radius: 6px;
+            margin: 2px 0;
+        }
+
+        .target-val { font-weight: 800; }
+        .buy .target-val { color: #34d399; }
+        .sell .target-val { color: #f87171; }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        @media (max-height: 670px) {
+            body { padding: 6px; }
+            .calculator-card { padding: 14px 12px; }
+            .header { margin-bottom: 10px; }
+            .inputs-grid { margin-bottom: 10px; gap: 8px; }
+            .trade-box { padding: 10px; gap: 6px; }
+        }
+    </style>
 </head>
 <body>
-<div class="wrap">
-<h2>Risk Calculator</h2>
 
-<input id="risk" type="number" value="3000" placeholder="Risk Amount">
-<input id="rr" type="number" value="2" step="0.1" placeholder="Editable RR">
-<input id="high" type="number" placeholder="Signal High">
-<input id="low" type="number" placeholder="Signal Low">
+<div class="calculator-card">
+    <div class="header">
+        <h1>Smart Risk Calculator</h1>
+        <p>Auto-Buffer (0.1%) & Real Target Matrix</p>
+    </div>
 
-<div class="grid">
-<div class="card buy">
-<h3>BUY</h3>
-<div class="row"><span>Entry</span><b id="be">-</b></div>
-<div class="row"><span>SL</span><b id="bs">-</b></div>
-<div class="row"><span>Qty</span><b id="bq">-</b></div>
-<div class="row"><span>T1 (1.5R)</span><b id="bt1">-</b></div>
-<div class="row"><span>T2 (RR)</span><b id="bt2">-</b></div>
-</div>
+    <!-- Inputs Section -->
+    <div class="inputs-grid">
+        <div class="input-group full-width">
+            <label for="risk">Total Risk Amount <span class="hint">Rupees (₹)</span></label>
+            <div class="input-wrapper">
+                <span class="prefix">₹</span>
+                <input type="number" id="risk" value="3000" placeholder="3000" oninput="calculate()">
+            </div>
+        </div>
 
-<div class="card sell">
-<h3>SELL</h3>
-<div class="row"><span>Entry</span><b id="se">-</b></div>
-<div class="row"><span>SL</span><b id="ss">-</b></div>
-<div class="row"><span>Qty</span><b id="sq">-</b></div>
-<div class="row"><span>T1 (1.5R)</span><b id="st1">-</b></div>
-<div class="row"><span>T2 (RR)</span><b id="st2">-</b></div>
-</div>
-</div>
+        <div class="input-group">
+            <label for="high">High Price <span class="hint">High</span></label>
+            <div class="input-wrapper">
+                <span class="prefix">₹</span>
+                <input type="number" id="high" step="any" placeholder="e.g. 100" oninput="calculate()" autofocus>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="low">Low Price <span class="hint">Low</span></label>
+            <div class="input-wrapper">
+                <span class="prefix">₹</span>
+                <input type="number" id="low" step="any" placeholder="e.g. 99" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="input-group full-width">
+            <label for="rr2">Target 2 R:R Ratio <span class="hint">Editable Target 2</span></label>
+            <div class="input-wrapper">
+                <span class="prefix">1:</span>
+                <input type="number" id="rr2" value="2" step="0.1" placeholder="2" oninput="calculate()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-container">
+        <!-- BUY BOX -->
+        <div class="trade-box buy">
+            <div class="box-title">
+                BUY SIDE
+                <span class="badge">+0.1% Buf</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Entry (+0.1%)</span>
+                <span class="data-value" id="buyEntry">-</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">SL (-0.1%)</span>
+                <span class="data-value" id="buySL">-</span>
+            </div>
+            <div class="data-row highlight-row">
+                <span class="data-label">Quantity</span>
+                <span class="data-value" id="buyQty" style="color: #60a5fa;">-</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">T1 (1.5R Real)</span>
+                <span class="data-value target-val" id="buyT1">-</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label" id="lblBuyT2">T2 (2.0R Real)</span>
+                <span class="data-value target-val" id="buyT2">-</span>
+            </div>
+        </div>
+
+        <!-- SELL BOX -->
+        <div class="trade-box sell">
+            <div class="box-title">
+                SELL SIDE
+                <span class="badge">-0.1% Buf</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Entry (-0.1%)</span>
+                <span class="data-value" id="sellEntry">-</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">SL (+0.1%)</span>
+                <span class="data-value" id="sellSL">-</span>
+            </div>
+            <div class="data-row highlight-row">
+                <span class="data-label">Quantity</span>
+                <span class="data-value" id="sellQty" style="color: #f472b6;">-</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">T1 (1.5R Real)</span>
+                <span class="data-value target-val" id="sellT1">-</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label" id="lblSellT2">T2 (2.0R Real)</span>
+                <span class="data-value target-val" id="sellT2">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        ⚡ Buffer: 0.1% Entry/SL par applied hai | Targets real High/Low range par calculated hain.
+    </div>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-function put(id,v){$(id).textContent=v;}
-["risk","rr","high","low"].forEach(id=>$(id).addEventListener("input",calc));
+    function calculate() {
+        const risk = parseFloat(document.getElementById('risk').value) || 0;
+        const high = parseFloat(document.getElementById('high').value);
+        const low = parseFloat(document.getElementById('low').value);
+        const rr2 = parseFloat(document.getElementById('rr2').value) || 2;
 
-function calc(){
- const risk=parseFloat($("risk").value)||3000;
- const rr=parseFloat($("rr").value)||2;
- const high=parseFloat($("high").value);
- const low=parseFloat($("low").value);
+        document.getElementById('lblBuyT2').innerText = `T2 (${rr2}R Real)`;
+        document.getElementById('lblSellT2').innerText = `T2 (${rr2}R Real)`;
 
- if(isNaN(high)||isNaN(low)||high<=low){
-   ["be","bs","bq","bt1","bt2","se","ss","sq","st1","st2"].forEach(i=>put(i,"-"));
-   return;
- }
+        if (isNaN(high) || isNaN(low) || high <= low) {
+            const ids = ['buyEntry', 'buySL', 'buyQty', 'buyT1', 'buyT2', 'sellEntry', 'sellSL', 'sellQty', 'sellT1', 'sellT2'];
+            ids.forEach(id => document.getElementById(id).innerText = '-');
+            return;
+        }
 
- const buyEntry=high*1.001;
- const buySL=low*0.999;
- const buyRisk=buyEntry-buySL;
- const buyQty=Math.max(0,Math.floor(risk/buyRisk));
- const buyT1=buyEntry+buyRisk*1.5;
- const buyT2=buyEntry+buyRisk*rr;
+        // Real Risk Range
+        const realRiskPerShare = high - low;
 
- const sellEntry=low*0.999;
- const sellSL=high*1.001;
- const sellRisk=sellSL-sellEntry;
- const sellQty=Math.max(0,Math.floor(risk/sellRisk));
- const sellT1=sellEntry-sellRisk*1.5;
- const sellT2=sellEntry-sellRisk*rr;
+        // --- BUY CALCULATIONS ---
+        const buyEntry = high * 1.001; // +0.1% Buffer
+        const buySL = low * 0.999; // -0.1% Buffer
+        const buyRiskBuffer = buyEntry - buySL;
+        const buyQty = buyRiskBuffer > 0 ? Math.floor(risk / buyRiskBuffer) : 0;
+        
+        // Real Price Targets
+        const buyT1 = high + (1.5 * realRiskPerShare);
+        const buyT2 = high + (rr2 * realRiskPerShare);
 
- put("be",buyEntry.toFixed(2));
- put("bs",buySL.toFixed(2));
- put("bq",buyQty);
- put("bt1",buyT1.toFixed(2));
- put("bt2",buyT2.toFixed(2));
+        // --- SELL CALCULATIONS ---
+        const sellEntry = low * 0.999; // -0.1% Buffer
+        const sellSL = high * 1.001; // +0.1% Buffer
+        const sellRiskBuffer = sellSL - sellEntry;
+        const sellQty = sellRiskBuffer > 0 ? Math.floor(risk / sellRiskBuffer) : 0;
 
- put("se",sellEntry.toFixed(2));
- put("ss",sellSL.toFixed(2));
- put("sq",sellQty);
- put("st1",sellT1.toFixed(2));
- put("st2",sellT2.toFixed(2));
-}
+        // Real Price Targets
+        const sellT1 = low - (1.5 * realRiskPerShare);
+        const sellT2 = low - (rr2 * realRiskPerShare);
+
+        // Render Values
+        document.getElementById('buyEntry').innerText = buyEntry.toFixed(2);
+        document.getElementById('buySL').innerText = buySL.toFixed(2);
+        document.getElementById('buyQty').innerText = buyQty.toLocaleString('en-IN');
+        document.getElementById('buyT1').innerText = buyT1.toFixed(2);
+        document.getElementById('buyT2').innerText = buyT2.toFixed(2);
+
+        document.getElementById('sellEntry').innerText = sellEntry.toFixed(2);
+        document.getElementById('sellSL').innerText = sellSL.toFixed(2);
+        document.getElementById('sellQty').innerText = sellQty.toLocaleString('en-IN');
+        document.getElementById('sellT1').innerText = sellT1.toFixed(2);
+        document.getElementById('sellT2').innerText = sellT2.toFixed(2);
+    }
 </script>
+
 </body>
 </html>
